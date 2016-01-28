@@ -12,7 +12,7 @@ var gulp = require('gulp'),
 
 // Paths
 var pathDev = {
-  js: ['app/shared/*.js', 'app/shared/**/*.js', 'app/components/**/*.js'],
+  js: ['app/shared/*.js', 'app/shared/**/*.js', 'app/modules/**/*.js'],
   images: ['app/assets/images/*','app/assets/images/**/*'],
   data: ['app/assets/data/*.json','app/assets/data/**/*.json'],
   css: ['app/assets/sass/*.scss', 'app/assets/sass/**/*.scss', '!app/assets/sass/lib/'],
@@ -222,7 +222,7 @@ gulp.task('build', ['clean'], function(cb){
 
 // Task to start server and watch assets 
 // It creates the temp template cache 
-gulp.task('server', ['webserver', 'watch', 'tplCache'], function(){});
+gulp.task('server', ['webserver', 'watch', 'tplCache', 'build'], function(){});
 // Run server on dist folder to check if minification is working
 gulp.task('server:dist', ['webserver_dist'], function(){});
 

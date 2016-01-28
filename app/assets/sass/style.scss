@@ -1,14 +1,13 @@
 @import "lib/normalize";
 @import "lib/rem";
 @import "lib/unsemantic-grid-responsive-tablet";
-@import "partials/mixins";
 @import "partials/fonts";
 @import "partials/config";
 
-/** example of modular css **/
-@import "modules/overlay";
+/** apps scss files **/
+@import "modules/header";
 @import "modules/footer";
-
+@import "modules/overlay";
 
 // ----------------------------------------------------
 // 1. GENERAL SETTINGS

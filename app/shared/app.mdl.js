@@ -8,18 +8,12 @@
   function Rooter($locationProvider, $routeProvider) {
       $routeProvider
         .when('/', {
-          templateUrl: 'components/page-home/home.tpl.html',
+          templateUrl: 'modules/page-home/home.tpl.html',
           controller: 'homeCtrl',
-          controllerAs: 'main'
-          //Just use resolve if using restfull call
-          // resolve: {
-          //   mainSrv: ['restSrv', function(restSrv) {
-          //       return restSrv.Service();
-          //     }]
-          // }
+          controllerAs: 'hc'
         })
         .when('/error',{
-          templateUrl: 'components/page-error/error.tpl.html'
+          templateUrl: 'modules/page-error/error.tpl.html'
         })
         .otherwise({
           redirectTo: '/'
@@ -38,10 +32,7 @@
       'ngRoute',
       'ngSanitize',
       'ngTouch',
-      'ui-tracking',
-      'ui-scroll-to',
-      'ui-overlay',
-      'include-cleaner'
+      'OmnitureMdl'
     ])
     .config(Rooter)
     .run(['$rootScope', function($root) {
