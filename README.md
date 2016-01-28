@@ -1,4 +1,4 @@
-angular-gulp-seed
+HTML5 AngularJs Gulp seed
 =================
 
 Angular &amp; Gulp including: unsemantic "sass" (grid only) and other js to support IE8+
