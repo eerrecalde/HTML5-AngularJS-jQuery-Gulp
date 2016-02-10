@@ -6,19 +6,19 @@ var gulp = require('gulp'),
     del = require('del'), //plugins that doesnt start with 'gulp-'' needs to be defined here
     sequal = require('run-sequence'), // this plugin will help with asynchronous issue
     arg = require('yargs').argv,
+    //karma = require('karma'),
     map = require('map-stream');
-    //pagespeed = require('psi'); //pagespeed API
 
 
 // Paths
 var pathDev = {
-  js: ['app/shared/*.js', 'app/shared/**/*.js', 'app/modules/**/*.js'],
+  js: ['app/shared/*.js', 'app/shared/**/*.js', 'app/components/**/*.js', '!app/json-generator/*.js'],
   images: ['app/assets/images/*','app/assets/images/**/*'],
   data: ['app/assets/data/*.json','app/assets/data/**/*.json'],
   css: ['app/assets/sass/*.scss', 'app/assets/sass/**/*.scss', '!app/assets/sass/lib/'],
   tempCss: 'app/assets/css/',
-  tpl: ['app/**/*.tpl.html', 'app/**/**/*.tpl.html', '!app/assets/'],
-  temptpl: 'app/assets/js/',
+  tpl: ['app/**/*.tpl.html', 'app/**/**/*.tpl.html', '!app/assets/', '!app/index.html'],
+  temptpl: 'app/assets/js/'
 }
 
 
@@ -78,11 +78,10 @@ gulp.task('images', function() {
     .pipe(req.imagemin({
       progressive: true,
       interlaced: true 
-    })) //optimize images
+    })) //optimize imgs
     .pipe(gulp.dest(pathProd.images)) //move to dist folder
     .pipe(req.size({title: 'Opt images'}));
 });
-
 
 //Cache template
 gulp.task('tplCache', function () {
@@ -135,12 +134,6 @@ gulp.task('css', function () {
       sass: 'app/assets/sass/',
       output_style: sassStyle
     }))
-    // If add on error this will keep compiling without stop on issue
-    // .on('error', function(error){
-    //   // console.log(error.message);
-    //   console.log(error);
-    //   this.emit('end');
-    // })
     .pipe(req.autoprefixer({browsers: autoprefix_browsers}))
     .pipe(gulp.dest(pathDev.tempCss))
     .pipe(req.size({title: 'Compiled SASS and saved in app -> CSS folder'}));
@@ -149,14 +142,24 @@ gulp.task('css', function () {
 
 // Generate the final file with concat and/or min files "css and js"
 // The Css and Js will be transfered to assets root
+gulp.task('minifyCss', function(){
+  return gulp.src(pathProd.mainRoot+'/assets/css/*.css')
+    .pipe(req.if(isProd, req.cssnano()))
+    .pipe(gulp.dest(pathProd.mainRoot+'/assets/css'))
+    .pipe(req.size(req.if(isProd, {title: 'Concat and Min CSS files'}, {title: 'Concat files only'})));
+});
+
+gulp.task('minifyJs', function(){
+  return gulp.src(pathProd.mainRoot+'/assets/js/*.js')
+    .pipe(req.if(isProd, req.uglify({mangle: false})))
+    .pipe(gulp.dest(pathProd.mainRoot+'/assets/js'))
+    .pipe(req.size(req.if(isProd, {title: 'Concat and Min JS files'}, {title: 'Concat files only'})));
+});
+
 gulp.task('html', function(){
-  var assets = req.useref.assets();
   return gulp.src('app/*.html')
-    .pipe(assets)
-    //.pipe(req.if(  isProd,req.ngAnnotate()  ))
-    .pipe(req.if(isProd, req.if('*.js', req.uglify({mangle: false}))))
-    .pipe(req.if(isProd, req.if('*.css',  req.minifyCss())))
-    .pipe(assets.restore())
+    //.pipe(req.if(isProd, req.if('*.js', req.uglify({mangle: false}))))
+    //.pipe(req.if(isProd, req.if('*.css', req.cssnano())))
     .pipe(req.useref())
     .pipe(gulp.dest(pathProd.mainRoot))
     .pipe(req.size(req.if(isProd, {title: 'Concat and Min files'}, {title: 'Concat files only'})));
@@ -171,42 +174,62 @@ gulp.task('minhtml', function(){
   };
 
   return gulp.src('dist/*.html')
-    .pipe(req.if(isProd, req.minifyHtml(opts)))
+    .pipe(req.if(isProd, req.htmlmin(opts)))
     .pipe(gulp.dest(pathProd.mainRoot))
     .pipe(req.size({title: 'Html Minified'}));
 });
 
 /** Clean Dist folder before adding new files. you can clean other folder adding it to the array **/
 gulp.task('clean', function(cb) {
-    del(['dist'], cb);
+    return del(['dist'], cb);
 });
 
 
 /* Webserver with livereload facility */
 gulp.task('webserver', function() {
   gulp.src('app')
-    .pipe(req.webserver({
-      livereload: true,
-      directoryListing: false,
-      open: true
-      //fallback: 'index.html'
-    }));
+  .pipe(req.webserver({
+    livereload: true,
+    directoryListing: false,
+    open: true
+    //fallback: 'err.html'
+  }));
 });
 /* webserver dist folder */
 gulp.task('webserver_dist', function() {
   gulp.src('dist')
-    .pipe(req.webserver({
-      livereload: true,
-      directoryListing: false,
-      open: true
-      //fallback: 'index.html'
-    }));
+  .pipe(req.webserver({
+    livereload: false,
+    directoryListing: false,
+    open: true
+    //fallback: 'err.html'
+  }));
 });
 
+gulp.task('test', function () {
+  return gulp.src('./foobar')
+      .pipe(karma({
+        configFile: 'test/karma.conf.js',
+        action: 'run'
+      }))
+      .on('error', function(err) {
+        // Make sure failed tests cause gulp to exit non-zero
+        //if (err) throw err;
+        console.log(err.message);
+        if(err.message != 'karma exited with code 1') 
+          errorFlag = true;
+        //this.emit('end'); //instead of erroring the stream, end it
+      })
+      .on('end', function () {
+        if (errorFlag) {
+          process.exit(1);
+        }
+      });
+});
 
 //Task to watch changes on folders and file. 
 gulp.task('watch', function () {
-  gulp.watch(['app/*.html']);
+  gulp.watch(['app/*.html', '!app/json-generator/*.html']);
   gulp.watch(pathDev.tpl, ['tplCache']);
   gulp.watch(pathDev.js, ['jshint']);
   gulp.watch(pathDev.css, ['css']);
@@ -217,12 +240,15 @@ gulp.task('watch', function () {
 
 //gulp.task('build', ['clean'], function(cb){
 gulp.task('build', ['clean'], function(cb){
-    sequal(['fonts', 'data'], 'css', 'jshint', ['images'], ['html', 'tplCache'], 'minhtml', cb);
+  sequal(['fonts', 'data'], 'css', 'jshint', ['images'], ['html'], 'minifyCss', 'minifyJs', 'tplCache', 'minhtml', cb);
 });
 
 // Task to start server and watch assets 
 // It creates the temp template cache 
-gulp.task('server', ['webserver', 'watch', 'tplCache', 'build'], function(){});
+gulp.task('server', ['build'], function(cb){
+  sequal('webserver', 'watch', 'tplCache');
+});
+
 // Run server on dist folder to check if minification is working
 gulp.task('server:dist', ['webserver_dist'], function(){});
 
