@@ -33,7 +33,7 @@
 			obj.defaults.charSet = props.charSet || "UTF-8",
 			obj.defaults.channel = props.channel || "channel", 
 			obj.defaults.pageType = props.pageType || "",
-			obj.defaults.prop1 =  props.prop1 || this.pageName,
+			obj.defaults.prop1 =  props.prop1 || props.pageName || this.pageName,
 			obj.defaults.prop11 = props.prop11 || "prop11",
 			obj.defaults.prop12 = props.prop12 || "prop12",
 			obj.defaults.prop13 = props.prop13 || "prop13",
