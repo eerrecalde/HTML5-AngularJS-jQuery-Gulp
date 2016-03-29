@@ -6,7 +6,8 @@ var gulp = require('gulp'),
     del = require('del'), //plugins that doesnt start with 'gulp-'' needs to be defined here
     sequal = require('run-sequence'), // this plugin will help with asynchronous issue
     arg = require('yargs').argv,
-    //karma = require('karma'),
+    karmaSrvr = require('karma').Server,
+    gulpProtractor = require('gulp-angular-protractor'),
     map = require('map-stream');
 
 
@@ -206,25 +207,30 @@ gulp.task('webserver_dist', function() {
   }));
 });
 
-gulp.task('test', function () {
-  return gulp.src('./foobar')
-      .pipe(karma({
-        configFile: 'test/karma.conf.js',
-        action: 'run'
-      }))
-      .on('error', function(err) {
-        // Make sure failed tests cause gulp to exit non-zero
-        //if (err) throw err;
-        console.log(err.message);
-        if(err.message != 'karma exited with code 1') 
-          errorFlag = true;
-        //this.emit('end'); //instead of erroring the stream, end it
-      })
-      .on('end', function () {
-        if (errorFlag) {
-          process.exit(1);
-        }
-      });
+gulp.task('unit-test', function (cb) {
+  karmaSrvr.start({
+      configFile: __dirname + '/test/karma.conf.js',
+      singleRun: true
+  }, function() {
+      cb();
+  });
+});
+
+
+gulp.task('e2e-test', function(callback) {
+  var baseUrl = 'http://localhost:8000/';
+  console.log(baseUrl);
+  gulp.src(['test/e2e/scenarios.js'])
+  .pipe(gulpProtractor({
+      'configFile': 'test/protractor-conf.js',
+      'debug': false,
+      'args': ['--baseUrl', baseUrl],
+      'autoStartStopServer': true
+  }))
+  .on('error', function(e) {
+      console.log(e);
+  })
+  .on('end', callback);
 });
 
 //Task to watch changes on folders and file. 

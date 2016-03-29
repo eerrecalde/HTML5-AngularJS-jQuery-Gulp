@@ -12,9 +12,6 @@
           controller: 'homeCtrl',
           controllerAs: 'hc'
         })
-        .when('/error',{
-          templateUrl: 'modules/page-error/error.tpl.html'
-        })
         .otherwise({
           redirectTo: '/'
         });

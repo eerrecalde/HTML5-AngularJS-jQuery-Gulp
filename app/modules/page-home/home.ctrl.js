@@ -12,7 +12,7 @@
 
 		var hc = this;
 
-		hc.sectionTitle = 'Section title';
+		hc.ctrlTest = true;
 
 	}]);
 
